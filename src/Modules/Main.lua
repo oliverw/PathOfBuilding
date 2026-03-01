@@ -114,6 +114,7 @@ function main:Init()
 	self.showFlavourText = true
 	self.showAnimations = true
 	self.showAllItemAffixes = true
+	self.enableMCP = false
 	self.errorReadingSettings = false
 
 	if not SetDPIScaleOverridePercent then SetDPIScaleOverridePercent = function(scale) end end
@@ -263,6 +264,16 @@ the "Releases" section of the GitHub page.]])
 				data.printMissingMinionSkills()
 			end
 			ConPrintf("Startup time: %d ms", GetTime() - launch.startTime)
+			if self.enableMCP then
+				local errMsg, mcpMod = PLoadModule("Modules/MCPServer")
+				if errMsg then
+					ConPrintf("MCP Server: Failed to load module: %s", errMsg)
+				elseif mcpMod then
+					if mcpMod:Start() then
+						self.mcpServer = mcpMod
+					end
+				end
+			end
 		end
 	}
 
@@ -334,6 +345,10 @@ function main:CanExit()
 end
 
 function main:Shutdown()
+	if self.mcpServer then
+		self.mcpServer:Stop()
+		self.mcpServer = nil
+	end
 	self:CallMode("Shutdown")
 	self:SaveSettings()
 end
@@ -660,6 +675,9 @@ function main:LoadSettings(ignoreBuild)
 					self.dpiScaleOverridePercent = tonumber(node.attrib.dpiScaleOverridePercent) or 0
 					SetDPIScaleOverridePercent(self.dpiScaleOverridePercent)
 				end
+				if node.attrib.enableMCP then
+					self.enableMCP = node.attrib.enableMCP == "true"
+				end
 			end
 		end
 	end
@@ -791,6 +809,7 @@ function main:SaveSettings()
 		showAnimations = tostring(self.showAnimations),
 		showAllItemAffixes = tostring(self.showAllItemAffixes),
 		dpiScaleOverridePercent = tostring(self.dpiScaleOverridePercent),
+		enableMCP = tostring(self.enableMCP),
 	} })
 	local res, errMsg = common.xml.SaveXMLFile(setXML, self.userPath.."Settings.xml")
 	if not res then
@@ -1005,6 +1024,13 @@ function main:OpenOptionsPopup()
 	controls.showAllItemAffixes.tooltipText = "Display all item affix slots as a stacked list instead of hiding them in dropdowns"
 
 	nextRow()
+	controls.enableMCP = new("CheckBoxControl", { "TOPLEFT", nil, "TOPLEFT" }, { defaultLabelPlacementX, currentY, 20 }, "^7Enable MCP server:", function(state)
+		self.enableMCP = state
+	end)
+	controls.enableMCP.tooltipText = "Starts a local TCP server (port 56271) that allows AI agents to\nread and modify build data via the Model Context Protocol.\nRequires restart to take effect."
+	controls.enableMCP.state = self.enableMCP
+
+	nextRow()
 	drawSectionHeader("build", "Build-related options")
 
 	controls.showThousandsSeparators = new("CheckBoxControl", { "TOPLEFT", nil, "TOPLEFT"}, { defaultLabelPlacementX, currentY, 20 }, "^7Show thousands separators:", function(state)
@@ -1118,6 +1144,7 @@ function main:OpenOptionsPopup()
 	local initialShowAnimations = self.showAnimations
 	local initialShowAllItemAffixes = self.showAllItemAffixes
 	local initialDpiScaleOverridePercent = self.dpiScaleOverridePercent
+	local initialEnableMCP = self.enableMCP
 
 	-- last line with buttons has more spacing
 	nextRow(1.5)
@@ -1175,6 +1202,7 @@ function main:OpenOptionsPopup()
 		self.showAllItemAffixes = initialShowAllItemAffixes
 		self.dpiScaleOverridePercent = initialDpiScaleOverridePercent
 		SetDPIScaleOverridePercent(self.dpiScaleOverridePercent)
+		self.enableMCP = initialEnableMCP
 		main:ClosePopup()
 	end)
 	nextRow(1.5)
