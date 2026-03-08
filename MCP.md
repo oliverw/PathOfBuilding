@@ -5,6 +5,7 @@ Control Path of Building from AI agents via the [Model Context Protocol](https:/
 ## Prerequisites
 
 - [uv](https://docs.astral.sh/uv/) (Python package manager)
+- Python 3.10+
 - Path of Building running with MCP enabled (Settings > Enable MCP server)
 
 ## Setup
@@ -45,7 +46,7 @@ cd mcp && uv run pob-mcp
 3. Check **Enable MCP server**
 4. Restart Path of Building
 
-The MCP server runs inside the PoB process and communicates via file-based IPC in `~/.pob-mcp/`.
+The MCP server runs inside the PoB process and communicates via file-based IPC in `~/.pob-mcp/`. This works on native Windows, native Linux, and Wine (the IPC directory is resolved automatically).
 
 ## Available Tools
 

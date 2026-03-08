@@ -1027,7 +1027,7 @@ function main:OpenOptionsPopup()
 	controls.enableMCP = new("CheckBoxControl", { "TOPLEFT", nil, "TOPLEFT" }, { defaultLabelPlacementX, currentY, 20 }, "^7Enable MCP server:", function(state)
 		self.enableMCP = state
 	end)
-	controls.enableMCP.tooltipText = "Starts a local TCP server (port 56271) that allows AI agents to\nread and modify build data via the Model Context Protocol.\nRequires restart to take effect."
+	controls.enableMCP.tooltipText = "Allows AI agents to read and modify build data via\nthe Model Context Protocol (file-based IPC in ~/.pob-mcp/).\nRequires restart to take effect."
 	controls.enableMCP.state = self.enableMCP
 
 	nextRow()
